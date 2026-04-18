@@ -7,7 +7,7 @@ Two worked examples live here, each aimed at a different audience:
 | Directory | What it is | Audience |
 | --- | --- | --- |
 | [`tutorial/`](tutorial/) | A **4-phase high-throughput screening** pipeline (GDB-17 SMILES → 3D embed → AIMNet2 relax → gpu4pyscf DFT HOMO/LUMO). End-to-end Slurm + Singularity orchestration in Python. | Readers learning the **orchestration pattern** — how to chunk, submit, chain with `--dependency`, aggregate. |
-| [`pipelines/`](pipelines/) | **Four independent domain demos** under one container: pharma conformer search (AIMNet2), Li⁺ solvation MD (MACE), CO₂/Cu catalysis (MACE), and solid-state EOS (MACE). | Readers who want a **worked example in their science domain** and will adapt one of them. |
+| [`pipelines/`](pipelines/) | **Four independent domain demos** under one container: [pharma conformer search (AIMNet2)](pipelines/1_pharma/), [Li⁺ solvation MD (MACE)](pipelines/2_battery/), [CO₂/Cu catalysis (MACE)](pipelines/3_catalysis/), and [solid-state EOS (MACE)](pipelines/4_solid_state/). | Readers who want a **worked example in their science domain** and will adapt one of them. |
 
 Both share the same shared container:
 
