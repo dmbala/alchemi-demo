@@ -27,11 +27,23 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
+# ASE's bulk() has reference data only for elemental solids; compounds need
+# crystalstructure + lattice constant. Small recipe book for common tutorial cases.
+_COMPOUND_RECIPES = {
+    "NaCl": {"crystalstructure": "rocksalt", "a": 5.64},
+    "MgO":  {"crystalstructure": "rocksalt", "a": 4.21},
+    "GaAs": {"crystalstructure": "zincblende", "a": 5.65},
+    "LiF":  {"crystalstructure": "rocksalt", "a": 4.03},
+}
+
+
 def build_system(args):
     from ase.build import bulk
     from ase.io import read
     if args.cif is not None:
         return read(str(args.cif))
+    if args.structure in _COMPOUND_RECIPES:
+        return bulk(args.structure, **_COMPOUND_RECIPES[args.structure])
     return bulk(args.structure)
 
 
