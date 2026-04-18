@@ -1,0 +1,5 @@
+/usr/bin/rm: cannot remove '/usr/local/cuda/compat/lib': Read-only file system
+rm: cannot remove '/usr/local/cuda/compat/lib': Read-only file system
+/src/4_aggregate_and_learn.py:61: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  f"timestamp={datetime.utcnow().isoformat()}Z "
+aggregated files=2 total=4 stable=4 -> /data/results/stable.csv

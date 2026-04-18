@@ -1,0 +1,5 @@
+/usr/bin/rm: cannot remove '/usr/local/cuda/compat/lib': Read-only file system
+rm: cannot remove '/usr/local/cuda/compat/lib': Read-only file system
+/usr/local/lib/python3.12/dist-packages/gpu4pyscf/lib/cutensor.py:154: UserWarning: using cupy as the tensor contraction engine.
+  warnings.warn(f'using {contract_engine} as the tensor contraction engine.')
+2026-04-18 18:52:23,377 INFO done n_ok=2 n_fail=0 elapsed=54.1s

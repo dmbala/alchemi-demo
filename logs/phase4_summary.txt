@@ -1,0 +1,1 @@
+timestamp=2026-04-18T18:53:17.760386+00:00 files=2 total=4 stable=4 energy_max=0.0 gap_min=1.0
