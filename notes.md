@@ -1,6 +1,6 @@
-Here is the updated `claude.md` system prompt for your AI agent. 
 
-I have fundamentally restructured the orchestration instructions. Instead of relying on static bash scripts, the agent is now instructed to build a **Python-native orchestration layer**. The head-node Python scripts will dynamically handle chunking, automatically generate the Slurm batch configurations, submit them via the `subprocess` module, and track their execution. 
+
+The head-node Python scripts will dynamically handle chunking, automatically generate the Slurm batch configurations, submit them via the `subprocess` module, and track their execution. 
 
 This gives you a much more robust, programmable pipeline that handles HPC scheduling entirely within Python.
 

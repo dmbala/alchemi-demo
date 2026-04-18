@@ -8,7 +8,7 @@ import sys
 
 SIF = (
     "/n/holylfs06/LABS/kempner_shared/Everyone/containers/"
-    "applications/alchemi-ht/alchemi_ht.sif"
+    "applications/alchemi-ht/alchemi_MACE.sif"
 )
 AIMNET_ASSETS = (
     "/n/netscratch/kempner_dev/Lab/bdesinghu/Agent/alchemi/container/aimnet_assets"

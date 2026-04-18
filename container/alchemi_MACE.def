@@ -1,0 +1,32 @@
+Bootstrap: localimage
+From: /n/holylfs06/LABS/kempner_shared/Everyone/containers/applications/alchemi-ht/alchemi_ht.sif
+
+%post
+    # The base image already has PyTorch (NGC build), CUDA, ALCHEMI toolkit,
+    # AIMNet2, RDKit, ASE, pandas, and gpu4pyscf installed. Add MACE on top.
+    #
+    # mace-torch pulls e3nn, opt_einsum, and a handful of pure-Python deps.
+    # Weights (MACE-MP-0 foundation model) are not baked in — mace-torch's
+    # first-use auto-download writes to ~/.cache at runtime, which is
+    # user-writable even when the SIF itself is read-only.
+
+    pip install mace-torch
+
+    # mace-torch pulls numpy 2.x via its transitive deps, but the NGC PyTorch
+    # in the base image was compiled against numpy 1.x — leaving numpy >=2
+    # installed breaks torch tensor↔numpy conversion and trips ABI warnings
+    # in cupy, numba, and gpu4pyscf. Pin back to match the base image.
+    pip install 'numpy<2'
+
+%environment
+    export LC_ALL=C
+    export CUDA_CACHE_DISABLE=0
+    export PYTHONNOUSERSITE=1
+    export WARP_CACHE_PATH=/tmp/warp_cache
+
+%help
+    Container for NVIDIA ALCHEMI + MACE-MP-0 foundation-model workflows.
+    Layered on top of alchemi_ht.sif, which itself inherits the base
+    alchemi.sif (NGC PyTorch 25.06 + nvalchemi-toolkit).
+    Adds: mace-torch.
+    Use for: batched MD, periodic systems, EOS/bulk-modulus, surface adsorption.

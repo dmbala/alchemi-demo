@@ -1,4 +1,4 @@
-"""GPU worker: embed, relax, compute HOMO/LUMO. Runs inside alchemi_ht.sif."""
+"""GPU worker: embed, relax, compute HOMO/LUMO. Runs inside alchemi_MACE.sif."""
 
 import argparse
 import csv

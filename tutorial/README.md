@@ -14,7 +14,7 @@ Each phase is one small Python script. No static `.slurm` files — Phase 2 comp
 ## What you'll need
 
 - FASRC account with a Kempner Slurm allocation (this tutorial defaults to `--account=kempner_dev --partition=kempner_dev`).
-- The shared container at `/n/holylfs06/LABS/kempner_shared/Everyone/containers/applications/alchemi-ht/alchemi_ht.sif` — already built, nothing to install.
+- The shared container at `/n/holylfs06/LABS/kempner_shared/Everyone/containers/applications/alchemi-ht/alchemi_MACE.sif` — already built, nothing to install.
 - Pre-staged AIMNet2 weights at `/n/netscratch/kempner_dev/Lab/bdesinghu/Agent/alchemi/container/aimnet_assets/aimnet2_wb97m_d3_0.pt`.
 - `python3.12` on the head node. **Not** `python3` — the system default is 3.6 and won't parse modern syntax.
 
@@ -135,7 +135,7 @@ Every phase has a companion notebook in `tutorial/notebooks/`:
 | `03_worker_demo.ipynb` | **Inside the container, on a GPU node** | Step-by-step physics for a single molecule (RDKit → AIMNet2 → gpu4pyscf) |
 | `04_aggregate_and_analyze.ipynb` | Head node, `python3.12` + matplotlib | Concatenate, plot gap distribution, apply filter |
 
-Notebook 03 needs `jupyter lab` running *inside* `alchemi_ht.sif` on a GPU allocation — the notebook's header has the exact `salloc` + `singularity exec` incantation.
+Notebook 03 needs `jupyter lab` running *inside* `alchemi_MACE.sif` on a GPU allocation — the notebook's header has the exact `salloc` + `singularity exec` incantation.
 
 ## Where to go next
 
