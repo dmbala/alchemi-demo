@@ -113,9 +113,10 @@ def main() -> int:
     import numpy as np
 
     atoms = load_or_build_box(args)
-    logging.info("system size: n_atoms=%d n_Li=%d n_O=%d",
-                 len(atoms), sum(1 for s in atoms.get_chemical_symbols() if s == "Li"),
-                 sum(1 for s in atoms.get_chemical_symbols() if s == "O"))
+    symbols = np.array(atoms.get_chemical_symbols())
+    li_idx = np.where(symbols == "Li")[0]
+    o_idx = np.where(symbols == "O")[0]
+    logging.info("system size: n_atoms=%d n_Li=%d n_O=%d", len(atoms), len(li_idx), len(o_idx))
 
     atoms.calc = mace_mp(model=args.mace_model, default_dtype="float32", device="cuda")
 
@@ -127,9 +128,6 @@ def main() -> int:
         friction=args.friction_inv_fs / units.fs,
     )
 
-    symbols = np.array(atoms.get_chemical_symbols())
-    li_idx = np.where(symbols == "Li")[0]
-    o_idx = np.where(symbols == "O")[0]
     trajectory = []
 
     def snapshot():

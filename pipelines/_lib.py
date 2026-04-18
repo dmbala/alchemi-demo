@@ -68,6 +68,28 @@ singularity exec --nv \\
 """
 
 
+def build_gpu_array_launch(*, job_name, args, n_tasks, concurrency, command,
+                           extra_binds="", directives=()) -> str:
+    """Compose a standard GPU array sbatch: 1-N%C, gres=gpu:1, repo bound at /project.
+
+    `command` is the line after the SIF — e.g., `python /project/pipelines/.../worker.py --...`
+    (Slurm vars like $SLURM_ARRAY_TASK_ID need $-escaping in the caller's f-string).
+    `extra_binds` is appended to the default `--bind {root}:/project`.
+    `directives` lets callers inject extras like `--dependency=afterany:...`.
+    """
+    root = args.project_root.resolve()
+    all_directives = (
+        f"--array=1-{n_tasks}%{concurrency}",
+        "--gres=gpu:1",
+        *directives,
+    )
+    bind = f"--bind {root}:/project {extra_binds}".strip()
+    return sbatch_script(
+        job_name=job_name, args=args, directives=all_directives,
+        bind=bind, command=command, logs_dir=args.logs_dir,
+    )
+
+
 def submit(script: str, dry_run: bool) -> str:
     if dry_run:
         print("---DRY RUN sbatch script---")

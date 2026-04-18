@@ -1,18 +1,23 @@
-"""Solid-state pipeline launcher — one Slurm task per crystal."""
+"""Solid-state pipeline launcher — one Slurm task per crystal.
+
+Accepts either a list of --structures (names passed to ase.build.bulk) or a list
+of --cifs (paths). One array task maps to one entry.
+"""
 
 import argparse
 import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
-from _lib import add_common_args, sbatch_script, submit
+from _lib import add_common_args, build_gpu_array_launch, submit
 
 
 def parse_args() -> argparse.Namespace:
     here = pathlib.Path(__file__).resolve().parent
     p = argparse.ArgumentParser(description="Launch solid-state EOS array.")
-    p.add_argument("--structures", nargs="+", default=["Si", "Cu", "NaCl"],
-                   help="Structures to pass to ase.build.bulk, one task each.")
+    p.add_argument("--structures", nargs="+", default=["Si", "Cu", "NaCl"])
+    p.add_argument("--cifs", nargs="+", type=pathlib.Path, default=None,
+                   help="Alternative to --structures: list of CIF paths, one per task.")
     p.add_argument("--output-dir", default=here / "data/outputs", type=pathlib.Path)
     p.add_argument("--logs-dir", default=here / "logs", type=pathlib.Path)
     p.add_argument("--concurrency", type=int, default=8)
@@ -26,30 +31,27 @@ def main() -> int:
     args.output_dir.mkdir(parents=True, exist_ok=True)
     args.logs_dir.mkdir(parents=True, exist_ok=True)
 
-    # Lay out structures as a bash array so the sbatch body can index it.
-    structures_arr = " ".join(f"'{s}'" for s in args.structures)
-    n_tasks = len(args.structures)
+    if args.cifs:
+        entries = [f"'--cif /project/{p.resolve().relative_to(root)}'" for p in args.cifs]
+    else:
+        entries = [f"'--structure {s}'" for s in args.structures]
+    arr_literal = " ".join(entries)
+    n_tasks = len(entries)
 
-    directives = (
-        f"--array=1-{n_tasks}%{args.concurrency}",
-        "--gres=gpu:1",
-    )
-    bind = f"--bind {root}:/project"
-    cmd = (
-        f"bash -c \"STRUCTURES=({structures_arr}); "
-        "STRUCTURE=\\${STRUCTURES[\\$SLURM_ARRAY_TASK_ID-1]}; "
+    command = (
+        f"bash -c \"ENTRIES=({arr_literal}); "
+        "ARGS=\\${ENTRIES[\\$SLURM_ARRAY_TASK_ID-1]}; "
         "python /project/pipelines/4_solid_state/worker_solid_state.py "
         "--task-id \\$SLURM_ARRAY_TASK_ID "
-        "--structure \\$STRUCTURE "
-        f"--output-dir /project/{args.output_dir.relative_to(root)}\""
+        f"--output-dir /project/{args.output_dir.relative_to(root)} "
+        "\\$ARGS\""
     )
-    script = sbatch_script(
-        job_name="alchemi_eos", args=args, directives=directives,
-        bind=bind, command=cmd, logs_dir=args.logs_dir,
+    script = build_gpu_array_launch(
+        job_name="alchemi_eos", args=args, n_tasks=n_tasks,
+        concurrency=args.concurrency, command=command,
     )
     print(f"submitting solid-state array 1-{n_tasks}%{args.concurrency}")
-    jobid = submit(script, args.dry_run)
-    print(f"jobid={jobid}")
+    print(f"jobid={submit(script, args.dry_run)}")
     return 0
 
 

@@ -65,11 +65,9 @@ def main() -> int:
         volumes.append(float(strained.get_volume()))
         energies.append(float(strained.get_potential_energy()))
 
+    from ase import units
     eos = EquationOfState(volumes, energies, eos="birchmurnaghan")
     v0, e0, b0 = eos.fit()
-    b0_gpa = b0 / (1e-21 / 1.60218e-19) / 1e9  # eV/Å^3 -> GPa
-    # Simpler: ASE provides the conversion via units.
-    from ase import units
     b0_gpa = b0 / units.kJ * 1.0e24
 
     out = {

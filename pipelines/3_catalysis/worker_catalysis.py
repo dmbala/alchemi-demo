@@ -75,7 +75,6 @@ def fix_bottom_layers(atoms, n_free_layers: int = 2):
     from ase.constraints import FixAtoms
 
     z = atoms.get_positions()[:, 2]
-    # Adsorbate atoms are C and O; everything else is the metal. Keep adsorbate free.
     metal_mask = np.array([s != "C" and s != "O" for s in atoms.get_chemical_symbols()])
     metal_z = z[metal_mask]
     if len(metal_z) == 0:
@@ -127,24 +126,25 @@ def main() -> int:
     systems = generate_sites(slab, args.n_sites, args.initial_height)
 
     results = []
+    import numpy as np
+    import torch
+
     for site_id, sys_atoms in systems:
         fix_bottom_layers(sys_atoms, n_free_layers=2)
         try:
             e_system = relax(sys_atoms, calc, args.fmax, args.max_opt_steps)
             e_ads = e_system - (e_slab + e_co2)
-            # Dissociation check: C–O bond length blow-up.
             pos = sys_atoms.get_positions()
-            c_idx = [i for i, s in enumerate(sys_atoms.get_chemical_symbols()) if s == "C"]
-            o_idx = [i for i, s in enumerate(sys_atoms.get_chemical_symbols()) if s == "O"]
+            symbols = sys_atoms.get_chemical_symbols()
+            c_idx = [i for i, s in enumerate(symbols) if s == "C"]
+            o_idx = [i for i, s in enumerate(symbols) if s == "O"]
             if c_idx and o_idx:
-                import numpy as np
-                max_co_bond = float(np.linalg.norm(pos[c_idx[0]] - pos[o_idx[-2:]], axis=1).max())
+                max_co_bond = float(np.linalg.norm(pos[c_idx[0]] - pos[o_idx], axis=1).max())
             else:
                 max_co_bond = float("nan")
-            dissociated = max_co_bond > 2.0
             results.append({
                 "site": site_id, "E_system_eV": e_system, "E_ads_eV": e_ads,
-                "max_CO_bond_A": max_co_bond, "dissociated": dissociated,
+                "max_CO_bond_A": max_co_bond, "dissociated": max_co_bond > 2.0,
             })
             ase_write(str(args.output_dir / f"task{args.task_id}_site{site_id}.xyz"), sys_atoms)
         except Exception as exc:
@@ -154,6 +154,9 @@ def main() -> int:
                 "E_ads_eV": float("nan"), "max_CO_bond_A": float("nan"),
                 "dissociated": False, "error": str(exc)[:80],
             })
+        finally:
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
 
     results.sort(key=lambda r: (r["E_ads_eV"] if r["E_ads_eV"] == r["E_ads_eV"] else float("inf")))
     csv_path = args.output_dir / f"task{args.task_id}_adsorption.csv"
@@ -162,8 +165,12 @@ def main() -> int:
         w.writeheader()
         w.writerows(results)
 
-    logging.info("done E_slab=%.4f eV E_CO2=%.4f eV best_site=%d E_ads_min=%.3f eV elapsed=%.1fs",
-                 e_slab, e_co2, results[0]["site"], results[0]["E_ads_eV"], time.time() - t0)
+    best = results[0] if results and results[0]["E_ads_eV"] == results[0]["E_ads_eV"] else None
+    if best is not None:
+        logging.info("done E_slab=%.4f eV E_CO2=%.4f eV best_site=%d E_ads_min=%.3f eV elapsed=%.1fs",
+                     e_slab, e_co2, best["site"], best["E_ads_eV"], time.time() - t0)
+    else:
+        logging.warning("done with no converged sites (check logs)")
     return 0
 
 
