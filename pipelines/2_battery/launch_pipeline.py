@@ -28,10 +28,17 @@ def main() -> int:
     args.output_dir.mkdir(parents=True, exist_ok=True)
     args.logs_dir.mkdir(parents=True, exist_ok=True)
 
-    initial_box_flag = (
-        f"--initial-box /project/{args.initial_box.relative_to(root)} "
-        if args.initial_box is not None else ""
-    )
+    initial_box_flag = ""
+    if args.initial_box is not None:
+        initial_box = args.initial_box.expanduser().resolve()
+        try:
+            initial_box_in_project = initial_box.relative_to(root)
+        except ValueError as exc:
+            raise SystemExit(
+                f"--initial-box must be inside --project-root so it is reachable "
+                f"inside the container: {initial_box} is not under {root}"
+            ) from exc
+        initial_box_flag = f"--initial-box /project/{initial_box_in_project} "
     command = (
         "python /project/pipelines/2_battery/worker_battery.py "
         "--task-id ${SLURM_ARRAY_TASK_ID} "
